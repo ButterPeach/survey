@@ -70,10 +70,9 @@ const linkTable = [
 ];
 
 function fillLinks(){
-  const idx=Math.min(36,Math.max(1,parseInt(document.getElementById('setPicker').value)||1));
-  // 如果没有这套，就复制第1套作为模板
-  if(!linkTable[idx]) linkTable[idx]=[...linkTable[1]];
-  keys.forEach((k,i)=>document.getElementById(k+'Input').value=linkTable[idx][i]);
+  const idx = Math.min(36, Math.max(1, parseInt(document.getElementById('setPicker').value) || 1));
+  const links = linkTable[idx].map(s => s.trim()); // 去掉尾巴空格
+  keys.forEach((k, i) => document.getElementById(k + 'Input').value = links[i]);
 }
 function saveLinks(){
   const pick=Math.min(36,Math.max(1,parseInt(document.getElementById('setPicker').value)));
@@ -82,8 +81,10 @@ function saveLinks(){
   alert('已保存！');
   location='index.html';
 }
-document.getElementById('setPicker').addEventListener('input',fillLinks);
-fillLinks();
+
+// 关键：让下拉框变动时实时刷新
+document.getElementById('setPicker').addEventListener('input', fillLinks);
+fillLinks();   // 首次进入也回填
 </script>
 </body>
 </html>

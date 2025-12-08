@@ -18,17 +18,17 @@
 <div class="section">
   <strong>问卷 1:</strong><br>
   <a id="link1" class="button" href="#" target="_blank">点击开始问卷1</a>
-  <button id="btn1" onclick="markCompleted(1)">我已完成问卷1</button>
+  <button id="btn1" onclick="markCompleted(1)" disabled>我已完成问卷1</button>
 </div>
 <div class="section">
   <strong>问卷 2:</strong><br>
   <a id="link2" class="button disabled" href="#">请先完成问卷1</a>
-  <button id="btn2" class="disabled" onclick="markCompleted(2)">我已完成问卷2</button>
+  <button id="btn2" class="disabled" onclick="markCompleted(2)" disabled>我已完成问卷2</button>
 </div>
 <div class="section">
   <strong>问卷 3:</strong><br>
   <a id="link3" class="button disabled" href="#">请先完成问卷1</a>
-  <button id="btn3" class="disabled" onclick="markCompleted(3)">我已完成问卷3</button>
+  <button id="btn3" class="disabled" onclick="markCompleted(3)" disabled>我已完成问卷3</button>
 </div>
 
 <button onclick="toggleAdmin()">管理员入口</button>
@@ -85,16 +85,31 @@ const linkTable = [
   /*35 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2D','https://www.credamo.com/s/3J'],
   /*36 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2E','https://www.credamo.com/s/3K']
 ];
-/***** 2. 读套号 *****/
+/***** 2. 读套号和链接 *****/
 const currentSetKey = 'currentSet';          // 换个名字，避免冲突
-let idx = Math.min(36, Math.max(1, parseInt(localStorage.getItem(currentSetKey) || '1')));
-if (!linkTable[idx]) linkTable[idx] = [...linkTable[1]];
-const useLinks = linkTable[idx];
+
+function getLinks() {
+  let idx = Math.min(36, Math.max(1, parseInt(localStorage.getItem(currentSetKey) || '1')));
+  if (!linkTable[idx]) linkTable[idx] = [...linkTable[1]];
+  // Build the final links array: prefer any admin-saved overrides in localStorage,
+  // otherwise fall back to the linkTable for the chosen set `idx`.
+  const useLinks = ['link1','link2','link3'].map((k, i) => {
+    const v = localStorage.getItem(k);
+    return (v && v.trim()) ? v.trim() : (linkTable[idx] && linkTable[idx][i]) || '';
+  });
+  return useLinks;
+}
+
+let useLinks = getLinks();
 
 /***** 3. 写按钮 *****/
-['link1','link2','link3'].forEach((id, i) => {
-  document.getElementById(id).href = useLinks[i];
-});
+function updateLinks() {
+  useLinks = getLinks();
+  ['link1','link2','link3'].forEach((id, i) => {
+    document.getElementById(id).href = useLinks[i];
+  });
+}
+updateLinks();
 
 /***** 4. 解锁逻辑 *****/
 function updateUI(){
@@ -104,28 +119,129 @@ function updateUI(){
       document.getElementById('btn'+n).textContent = '已完成';
       document.getElementById('btn'+n).disabled = true;
       document.getElementById('link'+n).classList.add('completed','disabled');
+      document.getElementById('link'+n).textContent = '已完成问卷'+n;
       document.getElementById('link'+n).removeAttribute('href');
     }
   });
+  
+  // 问卷1：始终可点击
+  const l1 = document.getElementById('link1');
+  if (!l1.classList.contains('completed')){
+    l1.classList.remove('disabled');
+    l1.href = useLinks[0];
+    l1.textContent = '点击开始问卷1';
+  }
+  const b1 = document.getElementById('btn1');
+  if (!b1.classList.contains('completed')){
+    b1.disabled = true;  // 初始禁用
+  }
+  
+  // 问卷2：需要先点击过问卷1的链接
+  const started1 = localStorage.getItem('started1') === 'true';
   const c1 = localStorage.getItem('completed1') === 'true';
-  const c2 = localStorage.getItem('completed2') === 'true';
-  if (c1){
-    const l2 = document.getElementById('link2'), b2 = document.getElementById('btn2');
-    if (!l2.classList.contains('completed')){
-      l2.classList.remove('disabled'); l2.textContent = '点击开始问卷2'; l2.href = useLinks[1];
+  const l2 = document.getElementById('link2'), b2 = document.getElementById('btn2');
+  if (!l2.classList.contains('completed')){
+    if (c1){
+      // 问卷1已完成，问卷2自动解锁
+      l2.classList.remove('disabled');
+      l2.textContent = '点击开始问卷2';
+      l2.href = useLinks[1];
       b2.classList.remove('disabled');
+      b2.disabled = true;
+    } else if (started1){
+      // 问卷1已点击但未完成，问卷2可点击
+      l2.classList.remove('disabled');
+      l2.textContent = '点击开始问卷2';
+      l2.href = useLinks[1];
+      b2.classList.remove('disabled');
+      b2.disabled = true;
+    } else {
+      // 问卷1未点击，问卷2禁用
+      l2.classList.add('disabled');
+      l2.textContent = '请先点击问卷1';
+      l2.removeAttribute('href');
+      b2.classList.add('disabled');
+      b2.disabled = true;
     }
   }
-  if (c2){
-    const l3 = document.getElementById('link3'), b3 = document.getElementById('btn3');
-    if (!l3.classList.contains('completed')){
-      l3.classList.remove('disabled'); l3.textContent = '点击开始问卷3'; l3.href = useLinks[2];
+  
+  // 问卷3：需要先点击过问卷2的链接
+  const started2 = localStorage.getItem('started2') === 'true';
+  const c2 = localStorage.getItem('completed2') === 'true';
+  const l3 = document.getElementById('link3'), b3 = document.getElementById('btn3');
+  if (!l3.classList.contains('completed')){
+    if (c2){
+      // 问卷2已完成，问卷3自动解锁
+      l3.classList.remove('disabled');
+      l3.textContent = '点击开始问卷3';
+      l3.href = useLinks[2];
       b3.classList.remove('disabled');
+      b3.disabled = true;
+    } else if (started2){
+      // 问卷2已点击但未完成，问卷3可点击
+      l3.classList.remove('disabled');
+      l3.textContent = '点击开始问卷3';
+      l3.href = useLinks[2];
+      b3.classList.remove('disabled');
+      b3.disabled = true;
+    } else {
+      // 问卷2未点击，问卷3禁用
+      l3.classList.add('disabled');
+      l3.textContent = '请先点击问卷2';
+      l3.removeAttribute('href');
+      b3.classList.add('disabled');
+      b3.disabled = true;
     }
   }
 }
+
+// 为链接添加点击事件处理
+function initLinkTracking(){
+  ['link1','link2','link3'].forEach((id, i) => {
+    const link = document.getElementById(id);
+    link.addEventListener('click', function(e){
+      if (!link.classList.contains('disabled') && !link.classList.contains('completed')){
+        localStorage.setItem('started'+(i+1), 'true');
+        // 启用对应的完成按钮
+        const btn = document.getElementById('btn'+(i+1));
+        btn.disabled = false;
+        // 链接变成绿色已点击状态
+        link.classList.add('completed');
+        link.textContent = '已完成问卷'+(i+1);
+        // 打开链接
+        window.open(useLinks[i], '_blank');
+        e.preventDefault();
+      }
+    });
+  });
+}
+
 function markCompleted(n){
+  // 验证是否点击过对应的链接
+  if (n === 1 && localStorage.getItem('started1') !== 'true'){
+    alert('请先点击"点击开始问卷1"');
+    return;
+  }
+  if (n === 2 && localStorage.getItem('started2') !== 'true'){
+    alert('请先点击"点击开始问卷2"');
+    return;
+  }
+  if (n === 3 && localStorage.getItem('started3') !== 'true'){
+    alert('请先点击"点击开始问卷3"');
+    return;
+  }
   localStorage.setItem('completed'+n, 'true');
+  
+  // 检查是否所有问卷都已完成
+  const allCompleted = 
+    localStorage.getItem('completed1') === 'true' &&
+    localStorage.getItem('completed2') === 'true' &&
+    localStorage.getItem('completed3') === 'true';
+  
+  if (allCompleted) {
+    alert('感谢您完成所有问卷，报酬将对应发放至您的账户');
+  }
+  
   location.reload();
 }
 
@@ -134,12 +250,20 @@ function toggleAdmin(){
   if (prompt('管理员密码') === 'A123456'){
     const p = document.getElementById('adminPanel');
     p.style.display = (p.style.display === 'none' || p.style.display === '') ? 'block' : 'none';
-    if (p.style.display === 'block') loadAdmin();
+    if (p.style.display === 'block') {
+      loadAdmin();
+      // 为套号选择框添加实时更新事件
+      document.getElementById('setPicker').addEventListener('input', fillAdminLinks);
+    }
   } else { alert('密码错误'); }
 }
 function loadAdmin(){
   const idx = Math.min(36, Math.max(1, parseInt(localStorage.getItem(currentSetKey) || '1')));
   document.getElementById('setPicker').value = idx;
+  fillAdminLinks();
+}
+function fillAdminLinks(){
+  const idx = Math.min(36, Math.max(1, parseInt(document.getElementById('setPicker').value) || 1));
   ['link1','link2','link3'].forEach((k, i) => {
     document.getElementById(k + 'Input').value = localStorage.getItem(k) || linkTable[idx][i];
   });
@@ -150,8 +274,13 @@ function saveAdmin(){
   ['link1','link2','link3'].forEach(k => {
     localStorage.setItem(k, document.getElementById(k + 'Input').value.trim());
   });
-  location.reload();
+  // 更新页面上的链接，而不是重新加载
+  updateLinks();
+  alert('已保存！');
+  // 关闭管理员面板
+  document.getElementById('adminPanel').style.display = 'none';
 }
 
 updateUI();
+initLinkTracking();
 </script>
