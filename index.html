@@ -131,7 +131,7 @@ function markCompleted(n){
 
 /***** 5. 管理员面板 *****/
 function toggleAdmin(){
-  if (prompt('管理员密码') === 'A1234567'){
+  if (prompt('管理员密码') === 'A123456'){
     const p = document.getElementById('adminPanel');
     p.style.display = (p.style.display === 'none' || p.style.display === '') ? 'block' : 'none';
     if (p.style.display === 'block') loadAdmin();
