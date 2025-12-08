@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>链接管理</title>
+  <style>
+    body{font-family:sans-serif;margin:40px}
+    input[type=text]{width:500px;margin:5px 0}
+    input[type=number]{width:80px}
+    button{padding:8px 16px;margin-top:10px}
+  </style>
+</head>
+<body>
+
+<h2>链接管理</h2>
+
+<label>选择问卷套号（1-36）：</label><br>
+<input type="number" id="setPicker" min="1" max="36" value="1"><br>
+
+<label>问卷1链接：</label><br><input type="text" id="link1Input"><br>
+<label>问卷2链接：</label><br><input type="text" id="link2Input"><br>
+<label>问卷3链接：</label><br><input type="text" id="link3Input"><br>
+
+<button onclick="saveLinks()">保存并应用</button>
+
+<hr>
+<p><em>提示：修改仅保存在当前浏览器；如需共享，请复制本页 URL。</em></p>
+
+<script>
+const keys=['link1','link2','link3'], setKey='currentSet';
+/****** 1. 链接库 36 套 ******/
+const linkTable = [
+  [], // 占位
+  /* 1 */  ['https://www.credamo.com/s/QVzIfqano/ cdmTWDlGOcvu','https://www.credamo.com/s/2C','https://www.credamo.com/s/3F'],
+  /* 2 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/QVzIfqano/ cdmTWDlGOcvu','https://www.credamo.com/s/3G'],
+  /* 3 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2E','https://www.credamo.com/s/3H'],
+  /* 4 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2C','https://www.credamo.com/s/3F'],
+  /* 5 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2D','https://www.credamo.com/s/3G'],
+  /* 6 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2E','https://www.credamo.com/s/3H'],
+  /* 7 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2C','https://www.credamo.com/s/3I'],
+  /* 8 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2D','https://www.credamo.com/s/3J'],
+  /* 9 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2E','https://www.credamo.com/s/3K'],
+  /*10 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2C','https://www.credamo.com/s/3I'],
+  /*11 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2D','https://www.credamo.com/s/3J'],
+  /*12 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2E','https://www.credamo.com/s/3K'],
+  /*13 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2C','https://www.credamo.com/s/3F'],
+  /*14 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2D','https://www.credamo.com/s/3G'],
+  /*15 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2E','https://www.credamo.com/s/3H'],
+  /*16 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2C','https://www.credamo.com/s/3I'],
+  /*17 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2D','https://www.credamo.com/s/3J'],
+  /*18 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2E','https://www.credamo.com/s/3K'],
+  /*19 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2C','https://www.credamo.com/s/3F'],
+  /*20 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2D','https://www.credamo.com/s/3G'],
+  /*21 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2E','https://www.credamo.com/s/3H'],
+  /*22 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2C','https://www.credamo.com/s/3I'],
+  /*23 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2D','https://www.credamo.com/s/3J'],
+  /*24 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2E','https://www.credamo.com/s/3K'],
+  /*25 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2C','https://www.credamo.com/s/3F'],
+  /*26 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2D','https://www.credamo.com/s/3G'],
+  /*27 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2E','https://www.credamo.com/s/3H'],
+  /*28 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2C','https://www.credamo.com/s/3I'],
+  /*29 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2D','https://www.credamo.com/s/3J'],
+  /*30 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2E','https://www.credamo.com/s/3K'],
+  /*31 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2C','https://www.credamo.com/s/3F'],
+  /*32 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2D','https://www.credamo.com/s/3G'],
+  /*33 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2E','https://www.credamo.com/s/3H'],
+  /*34 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2C','https://www.credamo.com/s/3I'],
+  /*35 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2D','https://www.credamo.com/s/3J'],
+  /*36 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2E','https://www.credamo.com/s/3K']
+];
+
+function fillLinks(){
+  const idx=Math.min(36,Math.max(1,parseInt(document.getElementById('setPicker').value)||1));
+  // 如果没有这套，就复制第1套作为模板
+  if(!linkTable[idx]) linkTable[idx]=[...linkTable[1]];
+  keys.forEach((k,i)=>document.getElementById(k+'Input').value=linkTable[idx][i]);
+}
+function saveLinks(){
+  const pick=Math.min(36,Math.max(1,parseInt(document.getElementById('setPicker').value)));
+  localStorage.setItem(setKey,pick);
+  keys.forEach(k=>localStorage.setItem(k,document.getElementById(k+'Input').value.trim()));
+  alert('已保存！');
+  location='index.html';
+}
+document.getElementById('setPicker').addEventListener('input',fillLinks);
+fillLinks();
+</script>
+</body>
+</html>

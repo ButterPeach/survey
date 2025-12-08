@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>问卷系统</title>
+  <style>
+    body{font-family:sans-serif;margin:40px}
+    .section{margin-bottom:30px}
+    a.button,button{display:inline-block;margin:10px 0;padding:10px 20px;background:#007bff;color:#fff;text-decoration:none;border:none;cursor:pointer}
+    a.button.disabled,button.disabled{background:#ccc;cursor:not-allowed;pointer-events:none}
+    a.button.completed,button.completed{background:#28a745}
+  </style>
+</head>
+<body>
+
+<h2>请按顺序完成以下三个问卷</h2>
+
+<div class="section">
+  <strong>问卷 1:</strong><br>
+  <a id="link1" class="button" href="#" target="_blank">点击开始问卷1</a>
+  <button id="btn1" onclick="markCompleted(1)">我已完成问卷1</button>
+</div>
+<div class="section">
+  <strong>问卷 2:</strong><br>
+  <a id="link2" class="button disabled" href="#">请先完成问卷1</a>
+  <button id="btn2" class="disabled" onclick="markCompleted(2)">我已完成问卷2</button>
+</div>
+<div class="section">
+  <strong>问卷 3:</strong><br>
+  <a id="link3" class="button disabled" href="#">请先完成问卷1</a>
+  <button id="btn3" class="disabled" onclick="markCompleted(3)">我已完成问卷3</button>
+</div>
+
+<button onclick="toggleAdmin()">管理员入口</button>
+
+<div id="adminPanel" style="display:none;margin-top:20px;border-top:1px solid #ccc;padding-top:10px;">
+  <h3>选择问卷套号（1-36）</h3>
+  <input type="number" id="setPicker" min="1" max="36" value="1">
+  <h4>链接微调（可选）</h4>
+  <label>问卷1链接：</label><br><input type="text" id="link1Input" style="width:100%"><br>
+  <label>问卷2链接：</label><br><input type="text" id="link2Input" style="width:100%"><br>
+  <label>问卷3链接：</label><br><input type="text" id="link3Input" style="width:100%"><br>
+  <button onclick="saveAdmin()">保存并应用</button>
+  <button onclick="toggleAdmin()">取消</button>
+</div>
+
+<script>
+/****** 1. 链接库 36 套 ******/
+const linkTable = [
+  [], // 占位
+  /* 1 */  ['https://www.credamo.com/s/QVzIfqano/ cdmTWDlGOcvu','https://www.credamo.com/s/2C','https://www.credamo.com/s/3F'],
+  /* 2 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/QVzIfqano/ cdmTWDlGOcvu','https://www.credamo.com/s/3G'],
+  /* 3 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2E','https://www.credamo.com/s/3H'],
+  /* 4 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2C','https://www.credamo.com/s/3F'],
+  /* 5 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2D','https://www.credamo.com/s/3G'],
+  /* 6 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2E','https://www.credamo.com/s/3H'],
+  /* 7 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2C','https://www.credamo.com/s/3I'],
+  /* 8 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2D','https://www.credamo.com/s/3J'],
+  /* 9 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2E','https://www.credamo.com/s/3K'],
+  /*10 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2C','https://www.credamo.com/s/3I'],
+  /*11 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2D','https://www.credamo.com/s/3J'],
+  /*12 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2E','https://www.credamo.com/s/3K'],
+  /*13 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2C','https://www.credamo.com/s/3F'],
+  /*14 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2D','https://www.credamo.com/s/3G'],
+  /*15 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2E','https://www.credamo.com/s/3H'],
+  /*16 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2C','https://www.credamo.com/s/3I'],
+  /*17 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2D','https://www.credamo.com/s/3J'],
+  /*18 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2E','https://www.credamo.com/s/3K'],
+  /*19 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2C','https://www.credamo.com/s/3F'],
+  /*20 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2D','https://www.credamo.com/s/3G'],
+  /*21 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2E','https://www.credamo.com/s/3H'],
+  /*22 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2C','https://www.credamo.com/s/3I'],
+  /*23 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2D','https://www.credamo.com/s/3J'],
+  /*24 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2E','https://www.credamo.com/s/3K'],
+  /*25 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2C','https://www.credamo.com/s/3F'],
+  /*26 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2D','https://www.credamo.com/s/3G'],
+  /*27 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2E','https://www.credamo.com/s/3H'],
+  /*28 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2C','https://www.credamo.com/s/3I'],
+  /*29 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2D','https://www.credamo.com/s/3J'],
+  /*30 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2E','https://www.credamo.com/s/3K'],
+  /*31 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2C','https://www.credamo.com/s/3F'],
+  /*32 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2D','https://www.credamo.com/s/3G'],
+  /*33 */  ['https://www.credamo.com/s/1A','https://www.credamo.com/s/2E','https://www.credamo.com/s/3H'],
+  /*34 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2C','https://www.credamo.com/s/3I'],
+  /*35 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2D','https://www.credamo.com/s/3J'],
+  /*36 */  ['https://www.credamo.com/s/1B','https://www.credamo.com/s/2E','https://www.credamo.com/s/3K']
+];
+/***** 2. 读套号 *****/
+const currentSetKey = 'currentSet';          // 换个名字，避免冲突
+let idx = Math.min(36, Math.max(1, parseInt(localStorage.getItem(currentSetKey) || '1')));
+if (!linkTable[idx]) linkTable[idx] = [...linkTable[1]];
+const useLinks = linkTable[idx];
+
+/***** 3. 写按钮 *****/
+['link1','link2','link3'].forEach((id, i) => {
+  document.getElementById(id).href = useLinks[i];
+});
+
+/***** 4. 解锁逻辑 *****/
+function updateUI(){
+  [1,2,3].forEach(n => {
+    if (localStorage.getItem('completed'+n) === 'true'){
+      document.getElementById('btn'+n).classList.add('completed');
+      document.getElementById('btn'+n).textContent = '已完成';
+      document.getElementById('btn'+n).disabled = true;
+      document.getElementById('link'+n).classList.add('completed','disabled');
+      document.getElementById('link'+n).removeAttribute('href');
+    }
+  });
+  const c1 = localStorage.getItem('completed1') === 'true';
+  const c2 = localStorage.getItem('completed2') === 'true';
+  if (c1){
+    const l2 = document.getElementById('link2'), b2 = document.getElementById('btn2');
+    if (!l2.classList.contains('completed')){
+      l2.classList.remove('disabled'); l2.textContent = '点击开始问卷2'; l2.href = useLinks[1];
+      b2.classList.remove('disabled');
+    }
+  }
+  if (c2){
+    const l3 = document.getElementById('link3'), b3 = document.getElementById('btn3');
+    if (!l3.classList.contains('completed')){
+      l3.classList.remove('disabled'); l3.textContent = '点击开始问卷3'; l3.href = useLinks[2];
+      b3.classList.remove('disabled');
+    }
+  }
+}
+function markCompleted(n){
+  localStorage.setItem('completed'+n, 'true');
+  location.reload();
+}
+
+/***** 5. 管理员面板 *****/
+function toggleAdmin(){
+  if (prompt('管理员密码') === 'A123456'){
+    const p = document.getElementById('adminPanel');
+    p.style.display = (p.style.display === 'none' || p.style.display === '') ? 'block' : 'none';
+    if (p.style.display === 'block') loadAdmin();
+  } else { alert('密码错误'); }
+}
+function loadAdmin(){
+  const idx = Math.min(36, Math.max(1, parseInt(localStorage.getItem(currentSetKey) || '1')));
+  document.getElementById('setPicker').value = idx;
+  ['link1','link2','link3'].forEach((k, i) => {
+    document.getElementById(k + 'Input').value = localStorage.getItem(k) || linkTable[idx][i];
+  });
+}
+function saveAdmin(){
+  const pick = Math.min(36, Math.max(1, parseInt(document.getElementById('setPicker').value)));
+  localStorage.setItem(currentSetKey, pick);
+  ['link1','link2','link3'].forEach(k => {
+    localStorage.setItem(k, document.getElementById(k + 'Input').value.trim());
+  });
+  location.reload();
+}
+
+updateUI();
+</script>
